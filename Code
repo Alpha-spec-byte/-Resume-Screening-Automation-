@@ -1,0 +1,68 @@
+Python
+!pip install pymupdf scikit-learn spacy
+!python -m spacy download en_core_web_sm
+
+import fitz  # PyMuPDF
+import spacy
+from spacy.matcher import PhraseMatcher
+from google.colab import files
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import io
+
+# Load spaCy model
+nlp = spacy.load("en_core_web_sm")
+
+# --- 1. NEW FUNCTION: Extract Skills via spaCy ---
+def extract_skills(text, skill_db):
+    doc = nlp(text.lower())
+    matcher = PhraseMatcher(nlp.vocab)
+    
+    # Create patterns for the matcher
+    patterns = [nlp.make_doc(skill.lower()) for skill in skill_db]
+    matcher.add("SKILL_LIST", patterns)
+    
+    matches = matcher(doc)
+    found_skills = set()
+    for match_id, start, end in matches:
+        found_skills.add(doc[start:end].text)
+        
+    return sorted(list(found_skills))
+
+# --- 2. FUNCTION: Extract text from PDF ---
+def extract_text_from_pdf(pdf_stream):
+    doc = fitz.open(stream=pdf_stream, filetype="pdf")
+    text = ""
+    for page in doc:
+        text += page.get_text()
+    return text
+
+# --- 3. FUNCTION: TF-IDF Match Calculation ---
+def calculate_match(resume_text, job_description):
+    documents = [resume_text, job_description]
+    vectorizer = TfidfVectorizer(stop_words='english')
+    tfidf_matrix = vectorizer.fit_transform(documents)
+    score = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])
+    return score[0][0] * 100
+
+# --- PRACTICAL EXECUTION ---
+
+# A. Define your Skill Database (Customize this list!)
+skill_database = [
+    "Python", "SQL", "SQLite", "Data Engineering", "Machine Learning", 
+    "Scikit-learn", "Data Munging", "MATLAB", "Cybersecurity", 
+    "Docker", "NLP", "Tableau", "Java", "C++", "Image Processing"
+]
+
+# B. Job Description
+job_description = """
+We are looking for a Data Science Intern proficient in Python and SQL. 
+Experience with data engineering, database management (SQLite), 
+and machine learning libraries like scikit-learn is preferred. 
+Candidates should have experience in data munging and building 
+automated scripts for data processing.
+"""
+
+# C. File Upload
+print("Please upload your resume PDF file:")
+uploaded = files.upload()
