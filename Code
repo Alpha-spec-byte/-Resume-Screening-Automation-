@@ -64,5 +64,5 @@ automated scripts for data processing.
 """
 
 # C. File Upload
-print("Please upload your resume PDF file:")
+print("Upload your resume PDF file:")
 uploaded = files.upload()
