@@ -45,7 +45,7 @@ def calculate_match(resume_text, job_description):
     score = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])
     return score[0][0] * 100
 
-# ----- PRACTICAL EXECUTION ----
+# --- PRACTICAL EXECUTION ---
 
 # A. Define your Skill Database (Customize this list!)
 skill_database = [
